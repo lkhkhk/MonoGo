@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>바둑 연습 웹앱</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .game-area {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .board-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .board {
+            background: #deb887;
+            border: 3px solid #8b7355;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(19, 25px);
+            grid-template-rows: repeat(19, 25px);
+            gap: 0;
+            position: relative;
+        }
+
+        .intersection {
+            width: 25px;
+            height: 25px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 가로선 */
+        .intersection::before {
+            content: '';
+            position: absolute;
+            background: #2c1810;
+            height: 2px;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        /* 세로선 */
+        .intersection::after {
+            content: '';
+            position: absolute;
+            background: #2c1810;
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        /* 경계선 처리 */
+        .intersection.top-edge::after {
+            height: 50%;
+            top: 50%;
+        }
+
+        .intersection.bottom-edge::after {
+            height: 50%;
+            top: 0;
+        }
+
+        .intersection.left-edge::before {
+            width: 50%;
+            left: 50%;
+        }
+
+        .intersection.right-edge::before {
+            width: 50%;
+            left: 0;
+        }
+
+        .stone {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .stone.black {
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+            border: 1px solid #333;
+            color: white;
+            text-shadow: 0 0 2px rgba(0,0,0,0.8);
+        }
+
+        .stone.white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+            border: 1px solid #aaa;
+            color: #333;
+            text-shadow: 0 0 2px rgba(255,255,255,0.8);
+        }
+
+        .stone:hover {
+            transform: scale(1.1);
+        }
+
+        .stone.last-move {
+            box-shadow: 0 0 8px #ff6b6b, 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .star-point {
+            width: 6px;
+            height: 6px;
+            background: #2c1810;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            width: 300px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+        }
+
+        .toggle-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .current-player {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .current-player.black {
+            background: #333;
+            color: white;
+        }
+
+        .current-player.white {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ccc;
+        }
+
+        .score {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .score h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .move-history, .saved-games {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .move-history h4, .saved-games h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .move-item {
+            font-size: 0.9em;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .saved-game-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .saved-game-info {
+            flex: 1;
+            font-size: 0.85em;
+        }
+
+        .saved-game-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .saved-game-date {
+            color: #666;
+            font-size: 0.8em;
+        }
+
+        .saved-game-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.8em;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-small.load {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-small.delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .controls {
+                width: 100%;
+            }
+            
+            .board-grid {
+                grid-template-columns: repeat(19, 20px);
+                grid-template-rows: repeat(19, 20px);
+            }
+            
+            .intersection {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .stone {
+                width: 18px;
+                height: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔴⚪ 바둑 연습 웹앱</h1>
+        </div>
+        
+        <div class="game-area">
+            <div class="board-container">
+                <div class="board">
+                    <div class="board-grid" id="board"></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="current-player" id="currentPlayer">
+                    흑돌 차례
+                </div>
+                
+                <div class="toggle-section">
+                    <button class="toggle-btn active" id="showNumbersBtn" onclick="toggleMoveNumbers()">
+                        수순 표시
+                    </button>
+                </div>
+                
+                <div class="score control-section">
+                    <h3>점수</h3>
+                    <div class="score-item">
+                        <span>흑돌 포로:</span>
+                        <span id="blackCaptures">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span>백돌 포로:</span>
+                        <span id="whiteCaptures">0</span>
+                    </div>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="passMove()">패스</button>
+                    <button class="btn btn-primary" onclick="undoMove()">무르기</button>
+                    <button class="btn btn-success" onclick="saveGame()">게임 저장</button>
+                    <button class="btn btn-info" onclick="loadGame()">게임 불러오기</button>
+                    <button class="btn btn-danger" onclick="resetGame()">새 게임</button>
+                </div>
+                
+                <div class="move-history">
+                    <h4>수순</h4>
+                    <div id="moveHistory"></div>
+                </div>
+                
+                <div class="saved-games control-section">
+                    <h4>저장된 게임</h4>
+                    <div id="savedGamesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 저장 모달 -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <h3>게임 저장</h3>
+            <input type="text" id="gameNameInput" placeholder="게임 이름을 입력하세요" maxlength="30">
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="confirmSaveGame()">저장</button>
+                <button class="btn btn-secondary" onclick="closeSaveModal()">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BadukGame {
+            constructor() {
+                this.board = Array(19).fill().map(() => Array(19).fill(0));
+                this.currentPlayer = 1; // 1: 흑돌, -1: 백돌
+                this.moveHistory = [];
+                this.captures = { black: 0, white: 0 };
+                this.ko = null;
+                this.showMoveNumbers = true;
+                this.initializeBoard();
+                this.updateUI();
+                this.loadSavedGamesList();
+            }
+
+            initializeBoard() {
+                const boardElement = document.getElementById('board');
+                boardElement.innerHTML = '';
+
+                // 별점 위치
+                const starPoints = [
+                    [3, 3], [3, 9], [3, 15],
+                    [9, 3], [9, 9], [9, 15],
+                    [15, 3], [15, 9], [15, 15]
+                ];
+
+                for (let row = 0; row < 19; row++) {
+                    for (let col = 0; col < 19; col++) {
+                        const intersection = document.createElement('div');
+                        intersection.className = 'intersection';
+                        
+                        // 경계선 클래스 추가
+                        if (row === 0) intersection.classList.add('top-edge');
+                        if (row === 18) intersection.classList.add('bottom-edge');
+                        if (col === 0) intersection.classList.add('left-edge');
+                        if (col === 18) intersection.classList.add('right-edge');
+
+                        intersection.dataset.row = row;
+                        intersection.dataset.col = col;
+                        intersection.onclick = () => this.makeMove(row, col);
+
+                        // 별점 추가
+                        if (starPoints.some(([r, c]) => r === row && c === col)) {
+                            const starPoint = document.createElement('div');
+                            starPoint.className = 'star-point';
+                            intersection.appendChild(starPoint);
+                        }
+
+                        boardElement.appendChild(intersection);
+                    }
+                }
+            }
+
+            makeMove(row, col) {
+                if (this.board[row][col] !== 0) return;
+
+                // 임시로 돌을 놓아보기
+                this.board[row][col] = this.currentPlayer;
+
+                // 상대방 돌 잡기 확인
+                const captured = this.checkCaptures(-this.currentPlayer);
+                
+                // 자살수 확인 (상대방을 잡지 못했을 때만)
+                if (captured === 0 && this.checkCaptures(this.currentPlayer) > 0) {
+                    this.board[row][col] = 0;
+                    alert('자살수는 둘 수 없습니다!');
+                    return;
+                }
+
+                // 패 확인
+                const boardString = JSON.stringify(this.board);
+                if (this.ko === boardString) {
+                    this.board[row][col] = 0;
+                    alert('패 규칙에 의해 둘 수 없습니다!');
+                    return;
+                }
+
+                // 유효한 수로 확정
+                const move = {
+                    player: this.currentPlayer,
+                    row: row,
+                    col: col,
+                    captured: captured,
+                    boardState: JSON.parse(JSON.stringify(this.board)),
+                    moveNumber: this.moveHistory.filter(m => !m.pass).length + 1
+                };
+
+                this.moveHistory.push(move);
+
+                // 포로 업데이트
+                if (this.currentPlayer === 1) {
+                    this.captures.black += captured;
+                } else {
+                    this.captures.white += captured;
+                }
+
+                // 패 상황 업데이트
+                if (captured === 1 && this.moveHistory.length > 1) {
+                    this.ko = JSON.stringify(this.moveHistory[this.moveHistory.length - 2].boardState);
+                } else {
+                    this.ko = null;
+                }
+
+                this.currentPlayer = -this.currentPlayer;
+                this.updateUI();
+            }
+
+            checkCaptures(player) {
+                let totalCaptured = 0;
+                const visited = Array(19).fill().map(() => Array(19).fill(false));
+
+                for (let row = 0; row < 19; row++) {
+                    for (let col = 0; col < 19; col++) {
+                        if (this.board[row][col] === player && !visited[row][col]) {
+                            const group = this.getGroup(row, col, visited);
+                            if (this.getLiberty(group) === 0) {
+                                // 그룹 제거
+                                group.forEach(([r, c]) => {
+                                    this.board[r][c] = 0;
+                                });
+                                totalCaptured += group.length;
+                            }
+                        }
+                    }
+                }
+
+                return totalCaptured;
+            }
+
+            getGroup(row, col, visited) {
+                const player = this.board[row][col];
+                const group = [];
+                const stack = [[row, col]];
+
+                while (stack.length > 0) {
+                    const [r, c] = stack.pop();
+                    if (visited[r][c]) continue;
+
+                    visited[r][c] = true;
+                    group.push([r, c]);
+
+                    // 인접한 같은 색 돌 찾기
+                    const neighbors = [
+                        [r-1, c], [r+1, c], [r, c-1], [r, c+1]
+                    ];
+
+                    for (const [nr, nc] of neighbors) {
+                        if (nr >= 0 && nr < 19 && nc >= 0 && nc < 19 && 
+                            !visited[nr][nc] && this.board[nr][nc] === player) {
+                            stack.push([nr, nc]);
+                        }
+                    }
+                }
+
+                return group;
+            }
+
+            getLiberty(group) {
+                const liberties = new Set();
+
+                for (const [row, col] of group) {
+                    const neighbors = [
+                        [row-1, col], [row+1, col], [row, col-1], [row, col+1]
+                    ];
+
+                    for (const [nr, nc] of neighbors) {
+                        if (nr >= 0 && nr < 19 && nc >= 0 && nc < 19 && 
+                            this.board[nr][nc] === 0) {
+                            liberties.add(`${nr},${nc}`);
+                        }
+                    }
+                }
+
+                return liberties.size;
+            }
+
+            updateUI() {
+                // 바둑판 업데이트
+                const intersections = document.querySelectorAll('.intersection');
+                intersections.forEach((intersection, index) => {
+                    const row = Math.floor(index / 19);
+                    const col = index % 19;
+                    
+                    // 기존 돌 제거
+                    const existingStone = intersection.querySelector('.stone');
+                    if (existingStone) {
+                        existingStone.remove();
+                    }
+
+                    // 새 돌 추가
+                    if (this.board[row][col] !== 0) {
+                        const stone = document.createElement('div');
+                        stone.className = `stone ${this.board[row][col] === 1 ? 'black' : 'white'}`;
+                        
+                        // 수순 번호 찾기
+                        const moveIndex = this.moveHistory.findIndex(move => 
+                            !move.pass && move.row === row && move.col === col
+                        );
+                        
+                        if (moveIndex !== -1 && this.showMoveNumbers) {
+                            const moveNumber = this.moveHistory[moveIndex].moveNumber;
+                            stone.textContent = moveNumber;
+                        }
+                        
+                        // 마지막 수 강조
+                        if (this.moveHistory.length > 0 && 
+                            !this.moveHistory[this.moveHistory.length - 1].pass &&
+                            this.moveHistory[this.moveHistory.length - 1].row === row &&
+                            this.moveHistory[this.moveHistory.length - 1].col === col) {
+                            stone.classList.add('last-move');
+                        }
+                        
+                        intersection.appendChild(stone);
+                    }
+                });
+
+                // 현재 플레이어 표시
+                const currentPlayerElement = document.getElementById('currentPlayer');
+                if (this.currentPlayer === 1) {
+                    currentPlayerElement.textContent = '흑돌 차례';
+                    currentPlayerElement.className = 'current-player black';
+                } else {
+                    currentPlayerElement.textContent = '백돌 차례';
+                    currentPlayerElement.className = 'current-player white';
+                }
+
+                // 포로수 업데이트
+                document.getElementById('blackCaptures').textContent = this.captures.black;
+                document.getElementById('whiteCaptures').textContent = this.captures.white;
+
+                // 수순 업데이트
+                this.updateMoveHistory();
+                
+                // 저장된 게임 목록 업데이트
+                this.loadSavedGamesList();
+            }
+
+            updateMoveHistory() {
+                const historyElement = document.getElementById('moveHistory');
+                historyElement.innerHTML = '';
+
+                const realMoves = this.moveHistory.filter(move => !move.pass);
+                realMoves.slice(-10).forEach((move, index) => {
+                    const moveItem = document.createElement('div');
+                    moveItem.className = 'move-item';
+                    const playerName = move.player === 1 ? '흑' : '백';
+                    const position = String.fromCharCode(65 + move.col) + (19 - move.row);
+                    moveItem.textContent = `${move.moveNumber}. ${playerName} ${position}`;
+                    historyElement.appendChild(moveItem);
+                });
+            }
+
+            toggleMoveNumbers() {
+                this.showMoveNumbers = !this.showMoveNumbers;
+                const btn = document.getElementById('showNumbersBtn');
+                if (this.showMoveNumbers) {
+                    btn.classList.add('active');
+                    btn.textContent = '수순 표시';
+                } else {
+                    btn.classList.remove('active');
+                    btn.textContent = '수순 숨김';
+                }
+                this.updateUI();
+            }
+
+            passMove() {
+                this.currentPlayer = -this.currentPlayer;
+                const move = {
+                    player: -this.currentPlayer,
+                    pass: true,
+                    boardState: JSON.parse(JSON.stringify(this.board))
+                };
+                this.moveHistory.push(move);
+                this.updateUI();
+            }
+
+            undoMove() {
+                if (this.moveHistory.length === 0) return;
+
+                const lastMove = this.moveHistory.pop();
+                
+                if (lastMove.pass) {
+                    this.currentPlayer = -this.currentPlayer;
+                } else {
+                    // 보드 상태 복원
+                    if (this.moveHistory.length > 0) {
+                        this.board = JSON.parse(JSON.stringify(this.moveHistory[this.moveHistory.length - 1].boardState));
+                    } else {
+                        this.board = Array(19).fill().map(() => Array(19).fill(0));
+                    }
+
+                    // 포로수 복원
+                    if (lastMove.player === 1) {
+                        this.captures.black -= lastMove.captured;
+                    } else {
+                        this.captures.white -= lastMove.captured;
+                    }
+
+                    this.currentPlayer = lastMove.player;
+                }
+
+                this.updateUI();
+            }
+
+            resetGame() {
+                this.board = Array(19).fill().map(() => Array(19).fill(0));
+                this.currentPlayer = 1;
+                this.moveHistory = [];
+                this.captures = { black: 0, white: 0 };
+                this.ko = null;
+                this.updateUI();
+            }
+
+            saveGameData(gameName) {
+                const gameData = {
+                    name: gameName,
+                    date: new Date().toLocaleString('ko-KR'),
+                    board: JSON.parse(JSON.stringify(this.board)),
+                    currentPlayer: this.currentPlayer,
+                    moveHistory: JSON.parse(JSON.stringify(this.moveHistory)),
+                    captures: JSON.parse(JSON.stringify(this.captures)),
+                    ko: this.ko
+                };
+
+                const savedGames = JSON.parse(localStorage.getItem('badukSavedGames') || '{}');
+                const gameId = Date.now().toString();
+                savedGames[gameId] = gameData;
+                localStorage.setItem('badukSavedGames', JSON.stringify(savedGames));
+                
+                this.loadSavedGamesList();
+                return true;
+            }
+
+            loadGameData(gameId) {
+                const savedGames = JSON.parse(localStorage.getItem('badukSavedGames') || '{}');
+                const gameData = savedGames[gameId];
+                
+                if (!gameData) return false;
+
+                this.board = JSON.parse(JSON.stringify(gameData.board));
+                this.currentPlayer = gameData.currentPlayer;
+                this.moveHistory = JSON.parse(JSON.stringify(gameData.moveHistory));
+                this.captures = JSON.parse(JSON.stringify(gameData.captures));
+                this.ko = gameData.ko;
+                
+                this.updateUI();
+                return true;
+            }
+
+            deleteGameData(gameId) {
+                const savedGames = JSON.parse(localStorage.getItem('badukSavedGames') || '{}');
+                delete savedGames[gameId];
+                localStorage.setItem('badukSavedGames', JSON.stringify(savedGames));
+                this.loadSavedGamesList();
+            }
+
+            loadSavedGamesList() {
+                const savedGames = JSON.parse(localStorage.getItem('badukSavedGames') || '{}');
+                const listElement = document.getElementById('savedGamesList');
+                listElement.innerHTML = '';
+
+                const gameIds = Object.keys(savedGames).sort((a, b) => b - a); // 최신순
+
+                if (gameIds.length === 0) {
+                    listElement.innerHTML = '<div style="text-align: center; color: #666; font-size: 0.9em;">저장된 게임이 없습니다</div>';
+                    return;
+                }
+
+                gameIds.forEach(gameId => {
+                    const game = savedGames[gameId];
+                    const gameItem = document.createElement('div');
+                    gameItem.className = 'saved-game-item';
+                    
+                    gameItem.innerHTML = `
+                        <div class="saved-game-info">
+                            <div class="saved-game-name">${game.name}</div>
+                            <div class="saved-game-date">${game.date}</div>
+                        </div>
+                        <div class="saved-game-actions">
+                            <button class="btn-small load" onclick="loadSpecificGame('${gameId}')">불러오기</button>
+                            <button class="btn-small delete" onclick="deleteSpecificGame('${gameId}')">삭제</button>
+                        </div>
+                    `;
+                    
+                    listElement.appendChild(gameItem);
+                });
+            }
+        }
+
+        // 게임 시작
+        let game;
+
+        window.onload = function() {
+            game = new BadukGame();
+        };
+
+        function passMove() {
+            game.passMove();
+        }
+
+        function undoMove() {
+            game.undoMove();
+        }
+
+        function resetGame() {
+            if (confirm('정말 새 게임을 시작하시겠습니까?')) {
+                game.resetGame();
+            }
+        }
+
+        function toggleMoveNumbers() {
+            game.toggleMoveNumbers();
+        }
+
+        function saveGame() {
+            document.getElementById('saveModal').style.display = 'block';
+            document.getElementById('gameNameInput').focus();
+        }
+
+        function closeSaveModal() {
+            document.getElementById('saveModal').style.display = 'none';
+            document.getElementById('gameNameInput').value = '';
+        }
+
+        function confirmSaveGame() {
+            const gameName = document.getElementById('gameNameInput').value.trim();
+            if (!gameName) {
+                alert('게임 이름을 입력해주세요.');
+                return;
+            }
+
+            if (game.saveGameData(gameName)) {
+                alert('게임이 저장되었습니다!');
+                closeSaveModal();
+            } else {
+                alert('게임 저장에 실패했습니다.');
+            }
+        }
+
+        function loadGame() {
+            const savedGames = JSON.parse(localStorage.getItem('badukSavedGames') || '{}');
+            if (Object.keys(savedGames).length === 0) {
+                alert('저장된 게임이 없습니다.');
+                return;
+            }
+            alert('아래 저장된 게임 목록에서 불러올 게임을 선택해주세요.');
+        }
+
+        function loadSpecificGame(gameId) {
+            if (confirm('현재 게임이 사라집니다. 저장된 게임을 불러오시겠습니까?')) {
+                if (game.loadGameData(gameId)) {
+                    alert('게임을 불러왔습니다!');
+                } else {
+                    alert('게임 불러오기에 실패했습니다.');
+                }
+            }
+        }
+
+        function deleteSpecificGame(gameId) {
+            if (confirm('이 게임을 삭제하시겠습니까?')) {
+                game.deleteGameData(gameId);
+                alert('게임이 삭제되었습니다.');
+            }
+        }
+
+        // 엔터 키로 저장
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('gameNameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmSaveGame();
+                }
+            });
+            
+            // 모달 외부 클릭 시 닫기
+            document.getElementById('saveModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSaveModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

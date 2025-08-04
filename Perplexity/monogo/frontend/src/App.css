@@ -1,0 +1,228 @@
+.app-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 24px;
+  font-family: 'Noto Sans KR', Arial, sans-serif;
+}
+
+.baduk-app-wrapper {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 25px 15px 45px;
+  box-sizing: border-box;
+  font-family: 'Noto Sans KR', Arial, sans-serif;
+  color: #222;
+}
+
+.baduk-main-container {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.baduk-board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 620px;
+  max-width: 100%;
+}
+
+.baduk-board-canvas {
+  position: relative;
+  background: radial-gradient(ellipse at top left, #f7e8c4 70%, #f3d282 100%);
+  border: 2px solid #111;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.12);
+  border-radius: 10px;
+  user-select: none;
+}
+
+.stone {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.25);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.stone.black { background: #111; }
+.stone.white { background: #f7f7f7; border: 1px solid #aaa; }
+
+.move-number {
+  font-size: 15px;
+  user-select: none;
+  pointer-events: none;
+  line-height: 1;
+  color: inherit;
+  text-shadow: 0 0 3px rgba(0,0,0,0.8);
+}
+
+.star-point {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: #111;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.board-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.baduk-buttons-row {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+  justify-content: center;
+  align-items: center;
+}
+
+.baduk-buttons-row button,
+.baduk-buttons-row input {
+  font-size: 15px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #999;
+  background: #f0e9aa;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.baduk-buttons-row input {
+  width: 140px;
+}
+
+.baduk-buttons-row button:hover {
+  background-color: #ded397;
+}
+
+.baduk-buttons-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.baduk-loadlist-box {
+  margin-top: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 260px;
+  background: #faf8f0;
+  border: 1px solid #ddd7a2;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+  font-size: 14px;
+}
+
+.baduk-loadlist-box ul {
+  margin: 6px 0 0 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.baduk-loadlist-box li.game-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.baduk-loadlist-box .game-name {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.baduk-loadlist-box button.load-btn,
+.baduk-loadlist-box button.rename-btn,
+.baduk-loadlist-box button.delete-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  transition: color 0.3s;
+}
+
+.baduk-loadlist-box button.load-btn:hover { color: #4a90e2;}
+.baduk-loadlist-box button.rename-btn { color: #f5a623;}
+.baduk-loadlist-box button.rename-btn:hover { color: #d48806;}
+.baduk-loadlist-box button.delete-btn { color: #e94e4e;}
+.baduk-loadlist-box button.delete-btn:hover { color: #ab2f2f;}
+
+.rename-input {
+  flex-grow: 1;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  border: 1px solid #999;
+}
+
+.baduk-movelist-box {
+  flex-shrink: 0;
+  width: 260px;
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid #ddd7a2;
+  border-radius: 8px;
+  background: #faf8f0;
+  padding: 14px 18px;
+  font-size: 15px;
+  line-height: 1.3;
+  box-shadow: 1px 1px 8px rgba(0,0,0,0.07);
+  user-select: none;
+}
+
+.baduk-movelist-box ol {
+  margin: 6px 0 0 0;
+  padding-left: 1.3em;
+}
+
+.game-over-box {
+  margin-top: 20px;
+  font-size: 18px;
+  text-align: center;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .baduk-main-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .baduk-board-container,
+  .baduk-movelist-box {
+    width: 100% !important;
+    max-width: 620px;
+    max-height: 250px;
+  }
+  .baduk-loadlist-box {
+    width: 100%;
+    max-height: 180px;
+  }
+}
