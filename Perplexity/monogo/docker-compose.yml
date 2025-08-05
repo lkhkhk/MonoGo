@@ -1,0 +1,44 @@
+services:
+  monogo-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: monogo-backend
+    restart: always
+    env_file:
+      - backend/.env.${APP_ENV:-development}
+    expose:
+      - "4000"
+    networks:
+      - monogo-net
+
+  monogo-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: monogo-frontend
+    restart: always
+    # 정적 파일만 서빙, 3000포트 쓸 필요 없음
+    env_file:
+      - frontend/.env.${APP_ENV:-development}
+    expose:
+      - "80"
+    networks:
+      - monogo-net
+
+  monogo-nginx:
+    image: nginx:latest
+    container_name: monogo-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - monogo-frontend
+      - monogo-backend
+    networks:
+      - monogo-net
+
+networks:
+  monogo-net:
+    driver: bridge

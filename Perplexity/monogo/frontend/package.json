@@ -1,5 +1,5 @@
 {
-  "name": "baduk-frontend",
+  "name": "monogo-frontend",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -11,7 +11,8 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start"
+    "start": "react-scripts start",
+    "build": "react-scripts build"
   },
   "browserslist": {
     "production": [

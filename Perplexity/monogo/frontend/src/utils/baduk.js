@@ -8,7 +8,7 @@ export function cloneBoard(board) {
   return board.map(row => [...row]);
 }
 
-function inside(x, y) {
+export function inside(x, y) {
   return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
 }
 

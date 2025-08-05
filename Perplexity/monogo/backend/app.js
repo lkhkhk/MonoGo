@@ -3,11 +3,14 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
+require('dotenv').config();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SAVE_DIR = path.join(__dirname, 'saved_games');
+const PORT = process.env.PORT || 4000;
+const SAVE_DIR = process.env.SAVE_PATH || path.join(__dirname, 'saved_games');
 if (!fs.existsSync(SAVE_DIR)) {
   fs.mkdirSync(SAVE_DIR);
 }
@@ -37,9 +40,14 @@ app.post('/save', (req, res) => {
 
 // 목록 조회 API
 app.get('/list', (req, res) => {
+  console.log('Received /list request'); // 디버그 로그 추가
   fs.readdir(SAVE_DIR, (err, files) => {
-    if (err) return res.status(500).json({ error: 'Failed to list saved games' });
+    if (err) {
+      console.error('Failed to read SAVE_DIR:', err); // 에러 로그 추가
+      return res.status(500).json({ error: 'Failed to list saved games' });
+    }
     const games = files.filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
+    console.log('Sending game list:', games); // 성공 로그 추가
     res.json(games);
   });
 });
@@ -86,5 +94,4 @@ app.put('/rename', (req, res) => {
   });
 });
 
-const PORT = 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
