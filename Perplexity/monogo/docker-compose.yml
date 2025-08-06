@@ -9,6 +9,8 @@ services:
       - backend/.env.${APP_ENV:-development}
     expose:
       - "4000"
+    volumes:
+      - ./backend/saved_games:/app/saved_games
     networks:
       - monogo-net
 
