@@ -4,7 +4,6 @@ import axios from 'axios';
 const SIZE = 19;
 const GRID_SIZE = 32;
 const BOARD_MARGIN = 10;
-const BOARD_PIXEL = (SIZE - 1) * GRID_SIZE + BOARD_MARGIN * 2;
 const BLACK = 1;
 const WHITE = 2;
 const EMPTY = 0;
@@ -38,16 +37,42 @@ function BadukBoard() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [reviewInterval, setReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL_MS);
+  const boardRef = useRef(null);
+  const [boardCalculatedSizes, setBoardCalculatedSizes] = useState({
+    margin: BOARD_MARGIN,
+    grid: GRID_SIZE,
+    stoneSize: 26,
+    starPointSize: 7,
+    stoneFontSize: 15,
+  });
 
   const reviewTimerRef = useRef(null);
   const reviewIndexRef = useRef(0);
 
   useEffect(() => {
+    const updateCalculatedSizes = () => {
+          // 뷰포트의 너비와 높이 중 작은 값을 기준으로 바둑판 크기를 조정
+          const viewportMin = Math.min(window.innerWidth, window.innerHeight) * 0.95; // 95% 사용
+          const calculatedGridSize = (viewportMin - (BOARD_MARGIN * 2)) / (SIZE - 1);
+
+          setBoardCalculatedSizes({
+            margin: BOARD_MARGIN * (viewportMin / ((SIZE - 1) * GRID_SIZE + BOARD_MARGIN * 2)), // 마진도 스케일링
+            grid: calculatedGridSize,
+            stoneSize: calculatedGridSize * (26 / GRID_SIZE), // 돌 크기
+            starPointSize: calculatedGridSize * (7 / GRID_SIZE), // 화점 크기
+            stoneFontSize: calculatedGridSize * (15 / GRID_SIZE), // 돌 숫자 폰트 크기
+          });
+        };
+
+    updateCalculatedSizes();
+    window.addEventListener('resize', updateCalculatedSizes);
+
     fetchSavedGames();
     return () => {
+      window.removeEventListener('resize', updateCalculatedSizes);
       if (reviewTimerRef.current) clearTimeout(reviewTimerRef.current);
     };
-  }, []);
+  }, []);  
 
   const fetchSavedGames = async () => {
     try {
@@ -322,10 +347,10 @@ function BadukBoard() {
   const handleBoardClick = (e) => {
     if (gameOver || isReviewing || isLoadedGame) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left - BOARD_MARGIN;
-    const offsetY = e.clientY - rect.top - BOARD_MARGIN;
-    const x = Math.round(offsetY / GRID_SIZE);
-    const y = Math.round(offsetX / GRID_SIZE);
+    const offsetX = e.clientX - rect.left - boardCalculatedSizes.margin;
+    const offsetY = e.clientY - rect.top - boardCalculatedSizes.margin;
+    const x = Math.round(offsetY / boardCalculatedSizes.grid);
+    const y = Math.round(offsetX / boardCalculatedSizes.grid);
     if (!inside(x, y)) return;
     if (board[x][y][0] !== EMPTY) return;
 
@@ -352,26 +377,18 @@ function BadukBoard() {
             key={`stone-${x}-${y}`}
             className={`stone ${cell === BLACK ? 'black' : 'white'}`}
             style={{
-              position: 'absolute',
-              top: BOARD_MARGIN + x * GRID_SIZE - 13,
-              left: BOARD_MARGIN + y * GRID_SIZE - 13,
-              width: 26,
-              height: 26,
-              borderRadius: '50%',
-              boxShadow: '1px 1px 4px rgba(0,0,0,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
-              zIndex: 2,
+              top: boardCalculatedSizes.margin + x * boardCalculatedSizes.grid - boardCalculatedSizes.stoneSize / 2,
+              left: boardCalculatedSizes.margin + y * boardCalculatedSizes.grid - boardCalculatedSizes.stoneSize / 2,
+              width: boardCalculatedSizes.stoneSize,
+              height: boardCalculatedSizes.stoneSize,
               color: cell === BLACK ? '#fff' : '#111',
               textShadow: cell === WHITE ? '0 0 2px #888' : '0 0 2px #000',
-              fontSize: 15,
-              userSelect: 'none',
-              pointerEvents: 'none',
+              fontSize: boardCalculatedSizes.stoneFontSize,
             }}
           >
-            {num > 0 ? num : ''}
+            <div className="move-number">
+              {num > 0 ? num : ''}
+            </div>
           </div>
         );
       }
@@ -385,15 +402,12 @@ function BadukBoard() {
       stars.push(
         <div
           key={`star-${i}-${j}`}
+          className="star-point"
           style={{
-            position: 'absolute',
-            width: 7,
-            height: 7,
-            background: '#111',
-            borderRadius: '50%',
-            top: BOARD_MARGIN + i * GRID_SIZE - 3,
-            left: BOARD_MARGIN + j * GRID_SIZE - 3,
-            zIndex: 1,
+            top: boardCalculatedSizes.margin + i * boardCalculatedSizes.grid - boardCalculatedSizes.starPointSize / 2,
+            left: boardCalculatedSizes.margin + j * boardCalculatedSizes.grid - boardCalculatedSizes.starPointSize / 2,
+            width: boardCalculatedSizes.starPointSize,
+            height: boardCalculatedSizes.starPointSize,
           }}
         />
       );
@@ -404,56 +418,37 @@ function BadukBoard() {
       <h1 className="app-title">바둑 대화</h1>
       <div
         className="baduk-main-container"
-        style={{ display: 'flex', gap: 20, justifyContent: 'center' }}
       >
         <div
           className="baduk-board-container"
-          style={{
-            flexShrink: 0,
-            minWidth: 620,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            position: 'relative',
-          }}
         >
           <div
+            ref={boardRef}
             className="baduk-board-canvas"
-            style={{
-              position: 'relative',
-              width: BOARD_PIXEL,
-              height: BOARD_PIXEL,
-              background: '#f7e8c4',
-              borderRadius: 10,
-              border: '2px solid #111',
-              boxShadow: '0 6px 30px rgba(0,0,0,0.12)',
-              userSelect: 'none',
-            }}
             onClick={handleBoardClick}
           >
             <svg
-              width={BOARD_PIXEL}
-              height={BOARD_PIXEL}
+              width="100%"
+              height="100%"
               className="board-grid"
-              style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }}
             >
               {Array.from({ length: SIZE }, (_, i) => (
                 <React.Fragment key={i}>
                   <line
-                    x1={BOARD_MARGIN}
-                    y1={BOARD_MARGIN + i * GRID_SIZE}
-                    x2={BOARD_MARGIN + (SIZE - 1) * GRID_SIZE}
-                    y2={BOARD_MARGIN + i * GRID_SIZE}
+                    x1={boardCalculatedSizes.margin}
+                    y1={boardCalculatedSizes.margin + i * boardCalculatedSizes.grid}
+                    x2={boardCalculatedSizes.margin + (SIZE - 1) * boardCalculatedSizes.grid}
+                    y2={boardCalculatedSizes.margin + i * boardCalculatedSizes.grid}
                     stroke="#222"
-                    strokeWidth={i === 0 || i === SIZE - 1 ? 2 : 1}
+                    strokeWidth={i === 0 || i === SIZE - 1 ? 2 * (boardCalculatedSizes.grid / GRID_SIZE) : 1 * (boardCalculatedSizes.grid / GRID_SIZE)}
                   />
                   <line
-                    x1={BOARD_MARGIN + i * GRID_SIZE}
-                    y1={BOARD_MARGIN}
-                    x2={BOARD_MARGIN + i * GRID_SIZE}
-                    y2={BOARD_MARGIN + (SIZE - 1) * GRID_SIZE}
+                    x1={boardCalculatedSizes.margin + i * boardCalculatedSizes.grid}
+                    y1={boardCalculatedSizes.margin}
+                    x2={boardCalculatedSizes.margin + i * boardCalculatedSizes.grid}
+                    y2={boardCalculatedSizes.margin + (SIZE - 1) * boardCalculatedSizes.grid}
                     stroke="#222"
-                    strokeWidth={i === 0 || i === SIZE - 1 ? 2 : 1}
+                    strokeWidth={i === 0 || i === SIZE - 1 ? 2 * (boardCalculatedSizes.grid / GRID_SIZE) : 1 * (boardCalculatedSizes.grid / GRID_SIZE)}
                   />
                 </React.Fragment>
               ))}
@@ -463,87 +458,64 @@ function BadukBoard() {
           </div>
 
           {/* 버튼 그룹 */}
-          {!isLoadedGame && !isReviewing && (
-            <div
-              className="baduk-buttons-row"
-              style={{
-                marginTop: 14,
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              }}
-            >
-              <button onClick={handlePass}>패스</button>
-              <button onClick={handleUndo} disabled={history.length === 0}>
-                되돌리기
-              </button>
-              <button onClick={handleNewGame}>새 게임</button>
-              <input
-                type="text"
-                placeholder="게임 이름 입력"
-                value={saveName}
-                onChange={(e) => setSaveName(e.target.value)}
-                disabled={renameTarget !== null}
-              />
-              <button onClick={handleSave} disabled={renameTarget !== null}>
-                저장
-              </button>
-              <button onClick={() => setShowLoadList((prev) => !prev)}>
-                게임목록
-              </button>
-            </div>
-          )}
-          {isLoadedGame && !isReviewing && (
-            <div
-              className="baduk-buttons-row"
-              style={{
-                marginTop: 14,
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              }}
-            >
-              <button onClick={handleNewGame}>새 게임</button>
-              <button onClick={handleClearBoard} disabled={isReviewing}>
-                초기화
-              </button>
-              <button onClick={handleStartReview} disabled={moveList.length === 0}>
-                복기 시작
-              </button>
-              <input
-                type="number"
-                min="100"
-                max="2000"
-                step="100"
-                style={{ width: 70 }}
-                value={reviewInterval}
-                onChange={(e) => setReviewInterval(Number(e.target.value))}
-              />
-            </div>
-          )}
-          {isReviewing && (
-            <div className="baduk-buttons-row">
-              <button onClick={togglePauseResume}>
-                {isPaused ? '재개' : '일시정지'}
-              </button>
-            </div>
-          )}
+          <div className="baduk-buttons-group">
+            {!isLoadedGame && !isReviewing && (
+              <div
+                className="baduk-buttons-row"
+              >
+                <button onClick={handlePass}>패스</button>
+                <button onClick={handleUndo} disabled={history.length === 0}>
+                  되돌리기
+                </button>
+                <button onClick={handleNewGame}>새 게임</button>
+                <input
+                  type="text"
+                  placeholder="게임 이름 입력"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  disabled={renameTarget !== null}
+                />
+                <button onClick={handleSave} disabled={renameTarget !== null}>
+                  저장
+                </button>
+                <button onClick={() => setShowLoadList((prev) => !prev)}>
+                  게임목록
+                </button>
+              </div>
+            )}
+            {isLoadedGame && !isReviewing && (
+              <div
+                className="baduk-buttons-row"
+              >
+                <button onClick={handleNewGame}>새 게임</button>
+                <button onClick={handleClearBoard} disabled={isReviewing}>
+                  초기화
+                </button>
+                <button onClick={handleStartReview} disabled={moveList.length === 0}>
+                  복기 시작
+                </button>
+                <input
+                  type="number"
+                  min="100"
+                  max="2000"
+                  step="100"
+                  value={reviewInterval}
+                  onChange={(e) => setReviewInterval(Number(e.target.value))}
+                />
+              </div>
+            )}
+            {isReviewing && (
+              <div className="baduk-buttons-row">
+                <button onClick={togglePauseResume}>
+                  {isPaused ? '재개' : '일시정지'}
+                </button>
+              </div>
+            )}
+          </div>
 
           {showLoadList && (
             <div
               className="baduk-loadlist-box"
-              style={{
-                marginTop: 12,
-                maxHeight: 200,
-                overflowY: 'auto',
-                width: 260,
-                background: '#faf8f0',
-                border: '1px solid #ddd7a2',
-                borderRadius: 8,
-                padding: '8px 12px',
-              }}
             >
               <b>저장된 게임 목록</b>
               <ul>
@@ -552,7 +524,6 @@ function BadukBoard() {
                   <li
                     key={name}
                     className="game-list-item"
-                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                   >
                     {renameTarget === name ? (
                       <>
@@ -595,16 +566,6 @@ function BadukBoard() {
         {/* 전체 수순 내역 */}
         <div
           className="baduk-movelist-box"
-          style={{
-            maxWidth: 260,
-            fontSize: 15,
-            background: '#faf8f0',
-            border: '1px solid #ddd7a2',
-            borderRadius: 8,
-            padding: '14px 18px',
-            overflowY: 'auto',
-            height: 420,
-          }}
         >
           <b>전체 수순 내역</b>
           <ol>
@@ -620,7 +581,6 @@ function BadukBoard() {
       {gameOver && (
         <div
           className="game-over-box"
-          style={{ marginTop: 20, fontSize: 18, textAlign: 'center', fontWeight: 700 }}
         >
           <p>
             흑: {board.flat().filter(([cell]) => cell === BLACK).length} / 백:{' '}
