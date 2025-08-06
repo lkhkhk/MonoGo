@@ -1,5 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+
+# Environment
+.env
+.env.development
+.env.production
+
 # dependencies
 node_modules/
 .pnp
@@ -10,6 +16,7 @@ coverage/
 
 # production
 build/
+saved_games/
 
 # misc
 .DS_Store
