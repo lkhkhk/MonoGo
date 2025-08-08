@@ -1,0 +1,188 @@
+/* 1. Reset & Global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: 'Noto Sans KR', Arial, sans-serif;
+  color: #222;
+}
+
+/* 2. App Wrapper */
+.baduk-app-wrapper {
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 3. Main Layout */
+.baduk-main-container {
+  display: flex;
+  gap: 2vw;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* 4. Board Container */
+.baduk-board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
+/* 5. Board Canvas & Grid */
+.baduk-board-canvas {
+  position: relative;
+  background: #deb887; /* B.CSS 보드 색상 */
+  border: 3px solid #8b7355;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.12);
+  user-select: none;
+  width: 90vmin;
+  height: 90vmin;
+  display: grid;
+  grid-template-columns: repeat(19, 1fr);
+  grid-template-rows: repeat(19, 1fr);
+}
+@media (min-width: 961px) {
+  .baduk-board-canvas {
+    max-width: 596px;
+    max-height: 596px;
+  }
+}
+
+/* 6. Intersection (격자점) */
+.intersection {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.intersection::before,
+.intersection::after {
+  content: '';
+  position: absolute;
+  background: #2c1810;
+  z-index: 1;
+}
+.intersection::before { /* 가로선 */
+  width: 100%;
+  height: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.intersection::after { /* 세로선 */
+  height: 100%;
+  width: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+/* 경계 처리 */
+.intersection.top-edge::after { height: 50%; top: 50%; }
+.intersection.bottom-edge::after { height: 50%; top: 0; }
+.intersection.left-edge::before { width: 50%; left: 50%; }
+.intersection.right-edge::before { width: 50%; left: 0; }
+
+/* 7. Star Point */
+.star-point {
+  width: 6px;
+  height: 6px;
+  background: #2c1810;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 5;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* 8. Stones (B.CSS 효과 적용) */
+.stone {
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+.stone.black {
+  background: radial-gradient(circle at 30% 30%, #555, #000);
+  border: 1px solid #333;
+  color: white;
+  text-shadow: 0 0 2px rgba(0,0,0,0.8);
+}
+.stone.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+  border: 1px solid #aaa;
+  color: #333;
+  text-shadow: 0 0 2px rgba(255,255,255,0.8);
+}
+.stone:hover { transform: scale(1.1); }
+.stone.last-move {
+  box-shadow: 0 0 8px #ff6b6b, 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* 9. Buttons */
+.baduk-buttons-row > button,
+.baduk-buttons-row > input {
+  font-size: 15px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #999;
+  background: #f0e9aa;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.baduk-buttons-row > button:hover { background-color: #ded397; }
+.baduk-buttons-row > button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 10. List Boxes */
+.list-box {
+  background: #faf8f0;
+  border: 1px solid #ddd7a2;
+  border-radius: 8px;
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+}
+
+/* 11. Responsive */
+@media (max-width: 960px) {
+  .baduk-app-wrapper { padding: 15px 20px 25px; }
+  .baduk-main-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .baduk-board-container { width: 95vw; }
+  .baduk-movelist-box, .baduk-loadlist-box {
+    width: 100%;
+  }
+  .baduk-movelist-box { max-height: 250px; position: static; }
+  .baduk-loadlist-box { max-height: 180px; }
+  .baduk-buttons-group { order: -1; margin-bottom: 20px; }
+}
+@media (max-width: 768px) {
+  .baduk-board-canvas {
+    grid-template-columns: repeat(19, 20px);
+    grid-template-rows: repeat(19, 20px);
+  }
+  .stone {
+    width: 80%;
+    height: 80%;
+  }
+}
