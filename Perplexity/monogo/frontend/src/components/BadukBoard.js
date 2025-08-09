@@ -75,7 +75,7 @@ function BadukBoard() {
 
   return (
     <div className="baduk-app-wrapper">
-      <h1 className="app-title">바둑 대화 (기본 격자 렌더링)</h1>
+      <h1 className="app-title">바둑 연습</h1>
       <div className="baduk-main-container">
         <div
           className="baduk-board-canvas"
