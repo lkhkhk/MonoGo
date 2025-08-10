@@ -26,3 +26,7 @@ export const deleteGame = (name) => {
 export const renameGame = (oldName, newName) => {
   return apiClient.put('/rename', { oldName, newName });
 };
+
+export const playMove = (history, turn, move) => {
+  return apiClient.post('/play', { history, turn, move });
+};

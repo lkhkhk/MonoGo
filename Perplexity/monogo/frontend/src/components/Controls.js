@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 
 const Controls = ({
+  turn,
+  capturedStones,
   onNewGame,
   onPass,
   onUndo,
@@ -23,6 +25,11 @@ const Controls = ({
     <div className="controls">
       <div>
         <h2>Game Controls</h2>
+        <div className="game-info">
+          <h3>Current Turn: {turn === 1 ? 'Black' : 'White'}</h3>
+          <p>Black Captured: {capturedStones[1]}</p>
+          <p>White Captured: {capturedStones[2]}</p>
+        </div>
         <button onClick={onNewGame}>New Game</button>
         <button onClick={onPass} disabled={isReviewing}>Pass</button>
         <button onClick={onUndo} disabled={isReviewing}>Undo</button>

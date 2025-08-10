@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BadukBoard from './components/BadukBoard';
 import Controls from './components/Controls';
-import { cloneBoard, findGroup, countLiberties, removeGroup, inside } from './utils/baduk';
 import * as api from './utils/api';
 import './App.css';
 
@@ -16,6 +15,7 @@ function App() {
   const [turn, setTurn] = useState(BLACK);
   const [savedGames, setSavedGames] = useState([]);
   const [reviewState, setReviewState] = useState({ isActive: false, currentMove: 0 });
+  const [capturedStones, setCapturedStones] = useState({ [BLACK]: 0, [WHITE]: 0 });
 
   const displayedBoard = reviewState.isActive ? history[reviewState.currentMove] : history[history.length - 1];
 
@@ -42,48 +42,37 @@ function App() {
     }
   };
 
-  const handleBoardClick = (x, y) => {
+  const handleBoardClick = async (x, y) => {
     if (reviewState.isActive) return;
-    if (!inside(x, y) || history[history.length - 1][x][y][0] !== EMPTY) return;
 
-    const currentBoard = history[history.length - 1];
-    const newBoard = cloneBoard(currentBoard);
-    const opponent = turn === BLACK ? WHITE : BLACK;
-    const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+    try {
+      const response = await api.playMove(history, turn, { x, y });
+      const { history: newHistory, turn: newTurn, capturedStones: newCapturedStones } = response.data;
 
-    const moveNumber = currentBoard.flat().reduce((max, [, num]) => (num > max ? num : max), 0) + 1;
-    newBoard[x][y] = [turn, moveNumber];
+      setHistory(newHistory);
+      setTurn(newTurn);
+      if (newCapturedStones > 0) {
+        setCapturedStones(prev => ({
+          ...prev,
+          [turn]: prev[turn] + newCapturedStones
+        }));
+      }
 
-    const colorBoard = newBoard.map(row => row.map(cell => cell[0]));
-
-    for (const [dx, dy] of directions) {
-      const nx = x + dx;
-      const ny = y + dy;
-      if (inside(nx, ny) && colorBoard[nx][ny] === opponent) {
-        const group = findGroup(colorBoard, nx, ny, opponent);
-        if (countLiberties(colorBoard, group) === 0) {
-          for (const { x: gx, y: gy } of group) {
-            newBoard[gx][gy] = [EMPTY, 0];
-          }
-        }
+    } catch (error) {
+      console.error("Failed to play move:", error);
+      if (error.response && error.response.data && error.response.data.error) {
+        alert(`Error: ${error.response.data.error}`);
+      } else {
+        alert("An unknown error occurred.");
       }
     }
-
-    const finalColorBoard = newBoard.map(row => row.map(cell => cell[0]));
-    const myGroup = findGroup(finalColorBoard, x, y, turn);
-    if (countLiberties(finalColorBoard, myGroup) === 0) {
-      console.log("Suicide move is not allowed.");
-      return;
-    }
-
-    setHistory([...history, newBoard]);
-    setTurn(opponent);
   };
 
   const handleNewGame = () => {
     setReviewState({ isActive: false, currentMove: 0 });
     setHistory([initialBoard]);
     setTurn(BLACK);
+    setCapturedStones({ [BLACK]: 0, [WHITE]: 0 });
   };
 
   const handleUndo = () => {
@@ -91,6 +80,7 @@ function App() {
     if (history.length > 1) {
       setHistory(history.slice(0, history.length - 1));
       setTurn(turn === BLACK ? WHITE : BLACK);
+      // Note: captured stones are not restored on undo
     }
   };
 
@@ -105,7 +95,7 @@ function App() {
       return;
     }
     try {
-      const gameState = { history, turn };
+      const gameState = { history, turn, capturedStones };
       await api.saveGame(name, gameState);
       alert("게임이 저장되었습니다.");
       fetchGameList();
@@ -121,6 +111,7 @@ function App() {
       const gameState = response.data;
       setHistory(gameState.history || [initialBoard]);
       setTurn(gameState.turn || BLACK);
+      setCapturedStones(gameState.capturedStones || { [BLACK]: 0, [WHITE]: 0 });
       setReviewState({ isActive: false, currentMove: 0 });
       alert("게임을 불러왔습니다.");
     } catch (error) {
@@ -158,6 +149,7 @@ function App() {
     <div className="app-container">
       <BadukBoard board={displayedBoard} onClick={handleBoardClick} />
       <Controls
+        turn={turn}
         onNewGame={handleNewGame}
         onUndo={handleUndo}
         onPass={handlePass}
@@ -168,6 +160,7 @@ function App() {
         onStartReview={handleStartReview}
         onStopReview={handleStopReview}
         isReviewing={reviewState.isActive}
+        capturedStones={capturedStones}
       />
     </div>
   );

@@ -26,7 +26,10 @@ function BoardGrid({ board, onClick }) {
         <div
           key={`${row}-${col}`}
           className={classes.join(' ')}
-          onClick={() => onClick(row, col)}
+          onClick={() => {
+            console.log(`BadukBoard: onClick received row=${row}, col=${col}`);
+            onClick(row, col);
+          }}
         >
           {isStarPoint(row, col) && <div className="star-point" />}
           {hasStone && <Stone color={color} moveNum={moveNum} />}
