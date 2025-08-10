@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const SIZE = 19;
 const BLACK = 1;
-const WHITE = 2;
 const EMPTY = 0;
 
-// 1. BoardGrid : 19×19 격자점(.intersection) 생성
+// The component now receives `board` and `onClick` as props.
 function BoardGrid({ board, onClick }) {
   const intersections = [];
-  const starCoords = [3, 9, 15]; // Define star coordinates here
+  const starCoords = [3, 9, 15];
   const isStarPoint = (r, c) =>
     starCoords.includes(r) && starCoords.includes(c);
 
@@ -38,7 +37,6 @@ function BoardGrid({ board, onClick }) {
   return <>{intersections}</>;
 }
 
-// 2. Stone : 바둑돌 위치 및 스타일
 function Stone({ color, moveNum }) {
   return (
     <div
@@ -50,29 +48,8 @@ function Stone({ color, moveNum }) {
   );
 }
 
-// 3. 메인 컴포넌트
-function BadukBoard() {
-  const [board, setBoard] = useState(
-    Array(SIZE)
-      .fill(null)
-      .map(() => Array(SIZE).fill(null).map(() => [EMPTY, 0]))
-  );
-  const [turn, setTurn] = useState(BLACK);
-
-  // 바둑판 클릭 이벤트: 클릭 위치에 돌 놓기
-  const handleBoardClick = (x, y) => {
-    if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return;
-    if (board[x][y][0] !== EMPTY) return;
-
-    const newBoard = board.map(row => row.map(cell => [...cell]));
-    const moveNumber =
-      board.flat().reduce((max, [, num]) => (num > max ? num : max), 0) + 1;
-    newBoard[x][y] = [turn, moveNumber];
-
-    setBoard(newBoard);
-    setTurn(turn === BLACK ? WHITE : BLACK);
-  };
-
+// The main component is now much simpler.
+function BadukBoard({ board, onClick }) {
   return (
     <div className="baduk-app-wrapper">
       <h1 className="app-title">바둑 연습</h1>
@@ -82,7 +59,7 @@ function BadukBoard() {
           role="grid"
           aria-label="바둑판"
         >
-          <BoardGrid board={board} onClick={handleBoardClick} />
+          <BoardGrid board={board} onClick={onClick} />
         </div>
       </div>
     </div>

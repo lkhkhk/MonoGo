@@ -183,3 +183,94 @@ html, body {
     font-size: 8px;
   }
 }
+
+/* App Layout */
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 20px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+}
+
+.controls h2 {
+  margin-bottom: 10px;
+}
+
+.controls button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background-color: #ccc;
+}
+
+/* Controls Data Management */
+.data-controls {
+  margin-top: 20px;
+  border-top: 1px solid #ccc;
+  padding-top: 20px;
+}
+
+.save-game {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.save-game input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.saved-games-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.saved-games-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.saved-games-list li span {
+  font-weight: bold;
+}
+
+.saved-games-list li div {
+  display: flex;
+  gap: 5px;
+}
+
+.delete-btn {
+  background-color: #e74c3c !important;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b !important;
+}
+
+.review-controls {
+  margin-top: 20px;
+  border-top: 1px solid #ccc;
+  padding-top: 20px;
+}
