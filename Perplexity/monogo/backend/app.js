@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 app.post('/play', (req, res) => {
   const { history, turn, move } = req.body;
   if (!history || !turn || !move) {
-    return res.status(400).json({ error: 'Invalid data' });
+    return res.status(400).json({ error: '유효하지 않은 데이터' });
   }
 
   const currentBoardWithMoveNumber = history[history.length - 1];
@@ -78,7 +78,7 @@ app.post('/play', (req, res) => {
   const opponent = turn === 1 ? 2 : 1;
 
   if (x < 0 || x >= boardSize || y < 0 || y >= boardSize || currentBoard[x][y] !== 0) {
-    return res.status(400).json({ error: 'Invalid move' });
+    return res.status(400).json({ error: '유효하지 않은 착수' });
   }
 
   const newBoard = currentBoard.map(row => [...row]);
@@ -103,7 +103,7 @@ app.post('/play', (req, res) => {
 
   const { liberties: selfLiberties } = findGroup(x, y, newBoard, turn);
   if (selfLiberties === 0) {
-    return res.status(400).json({ error: 'Suicide move is not allowed' });
+    return res.status(400).json({ error: '자살수는 허용되지 않습니다' });
   }
 
   const moveNumber = history.length;
@@ -126,16 +126,16 @@ app.post('/play', (req, res) => {
 
 // 저장 API
 app.post('/save', (req, res) => {
-  const { name, board, turn, moveNum, passCount, gameOver, moveList } = req.body;
-  if (!name || !board || !turn || !moveNum) {
-    return res.status(400).json({ error: 'Invalid data' });
+  const { name, history, turn, capturedStones } = req.body;
+  if (!name || !history || !turn || !capturedStones) {
+    return res.status(400).json({ error: '유효하지 않은 데이터' });
   }
   const safeName = safeFilename(name);
   const filePath = path.join(SAVE_DIR, `${safeName}.json`);
-  const data = { name, board, turn, moveNum, passCount, gameOver, moveList };
+  const data = { name, history, turn, capturedStones };
   fs.writeFile(filePath, JSON.stringify(data, null, 2), (err) => {
-    if (err) return res.status(500).json({ error: 'Save failed' });
-    res.json({ message: 'Game saved successfully' });
+    if (err) return res.status(500).json({ error: '저장 실패' });
+    res.json({ message: '게임이 성공적으로 저장되었습니다' });
   });
 });
 
@@ -144,11 +144,11 @@ app.get('/list', (req, res) => {
   console.log('Received /list request'); // 디버그 로그 추가
   fs.readdir(SAVE_DIR, (err, files) => {
     if (err) {
-      console.error('Failed to read SAVE_DIR:', err); // 에러 로그 추가
-      return res.status(500).json({ error: 'Failed to list saved games' });
+      console.error('SAVE_DIR 읽기 실패:', err); // 에러 로그 추가
+      return res.status(500).json({ error: '저장된 게임 목록 불러오기 실패' });
     }
     const games = files.filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
-    console.log('Sending game list:', games); // 성공 로그 추가
+    console.log('게임 목록 전송:', games); // 성공 로그 추가
     res.json(games);
   });
 });
@@ -158,9 +158,13 @@ app.get('/load/:name', (req, res) => {
   const safeName = safeFilename(req.params.name);
   const filePath = path.join(SAVE_DIR, `${safeName}.json`);
   fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Failed to load saved game' });
+    if (err) return res.status(500).json({ error: '저장된 게임 불러오기 실패' });
     try {
       const savedGame = JSON.parse(data);
+      // Ensure savedGame contains history, turn, and capturedStones
+      if (!savedGame.history || !savedGame.turn || !savedGame.capturedStones) {
+        return res.status(500).json({ error: '손상된 저장 데이터: history, turn, 또는 capturedStones 누락' });
+      }
       res.json(savedGame);
     } catch {
       res.status(500).json({ error: 'Corrupted saved data' });
@@ -173,25 +177,25 @@ app.delete('/delete/:name', (req, res) => {
   const safeName = safeFilename(req.params.name);
   const filePath = path.join(SAVE_DIR, `${safeName}.json`);
   fs.unlink(filePath, (err) => {
-    if (err) return res.status(500).json({ error: 'Delete failed' });
-    res.json({ message: 'Game deleted successfully' });
+    if (err) return res.status(500).json({ error: '삭제 실패' });
+    res.json({ message: '게임이 성공적으로 삭제되었습니다' });
   });
 });
 
 // 이름 변경 API
 app.put('/rename', (req, res) => {
   const { oldName, newName } = req.body;
-  if (!oldName || !newName) return res.status(400).json({ error: 'Invalid data' });
+  if (!oldName || !newName) return res.status(400).json({ error: '유효하지 않은 데이터' });
   const safeOld = safeFilename(oldName);
   const safeNew = safeFilename(newName);
   const oldPath = path.join(SAVE_DIR, `${safeOld}.json`);
   const newPath = path.join(SAVE_DIR, `${safeNew}.json`);
   if (fs.existsSync(newPath)) {
-    return res.status(400).json({ error: 'New name already exists' });
+    return res.status(400).json({ error: '새 이름이 이미 존재합니다' });
   }
   fs.rename(oldPath, newPath, (err) => {
-    if (err) return res.status(500).json({ error: 'Rename failed' });
-    res.json({ message: 'Game renamed successfully' });
+    if (err) return res.status(500).json({ error: '이름 변경 실패' });
+    res.json({ message: '게임 이름이 성공적으로 변경되었습니다' });
   });
 });
 
